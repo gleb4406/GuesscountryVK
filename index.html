@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="dark" />
+  <title>Угадай страну</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%23050b14' stroke='%23f0c14a' stroke-width='2'/%3E%3Cpath d='M2 16h28M16 2c4 4 6 9 6 14s-2 10-6 14c-4-4-6-9-6-14s2-10 6-14z' fill='none' stroke='%238ff0e0' stroke-width='1.4'/%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Unbounded:wght@500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <canvas id="stars" aria-hidden="true"></canvas>
+  <div id="globe"></div>
+  <div id="vignette"></div>
+  <canvas id="confetti"></canvas>
+
+  <div id="boot">
+    <div class="boot-card">
+      <div id="boot-spin" class="spinner"></div>
+      <p class="eyebrow" data-i18n="eyebrow">Планетарный квиз</p>
+      <h1 data-i18n="title">Угадай страну</h1>
+      <p id="boot-status" data-i18n="bootStatus">Поднимаем материки…</p>
+    </div>
+  </div>
+
+  <section id="menu">
+    <div class="menu-panel">
+      <div class="menu-top">
+        <p class="eyebrow" data-i18n="eyebrow">Планетарный квиз</p>
+        <div class="lang" role="group" data-i18n-aria="language" aria-label="Язык">
+          <button type="button" class="lang-btn is-on" data-lang="ru" aria-pressed="true">RU</button>
+          <button type="button" class="lang-btn" data-lang="en" aria-pressed="false">EN</button>
+        </div>
+      </div>
+      <h1 data-i18n="title">Угадай страну</h1>
+      <p class="lead" data-i18n="lead">Найдите страну на шаре с трёх попыток — по названию, флагу или столице.</p>
+
+      <p class="section-label" data-i18n="how">Как ищем</p>
+      <div class="choice-row">
+        <button type="button" class="choice is-on" data-mode="name" aria-pressed="true">
+          <span class="choice-mark" aria-hidden="true"><img src="icons/name.jpg" alt="" draggable="false" /></span>
+          <span class="choice-copy">
+            <strong data-i18n="byName">По названию</strong>
+            <span data-i18n="byNameHelp">Страну произносят вслух и пишут крупно</span>
+          </span>
+        </button>
+        <button type="button" class="choice" data-mode="flag" aria-pressed="false">
+          <span class="choice-mark" aria-hidden="true"><img src="icons/flag.jpg" alt="" draggable="false" /></span>
+          <span class="choice-copy">
+            <strong data-i18n="byFlag">По флагу</strong>
+            <span data-i18n="byFlagHelp">Название скрыто — узнайте полотно</span>
+          </span>
+        </button>
+        <button type="button" class="choice" data-mode="capital" aria-pressed="false">
+          <span class="choice-mark" aria-hidden="true"><img src="icons/capital.jpg" alt="" draggable="false" /></span>
+          <span class="choice-copy">
+            <strong data-i18n="byCapital">По столице</strong>
+            <span data-i18n="byCapitalHelp">Называют город — найдите его страну</span>
+          </span>
+        </button>
+      </div>
+
+      <p class="section-label" data-i18n="difficulty">Сложность</p>
+      <div class="diff-row" role="group" data-i18n-aria="difficulty" aria-label="Сложность">
+        <button type="button" class="diff" data-diff="easy" data-i18n="easy" aria-pressed="false">Легко</button>
+        <button type="button" class="diff" data-diff="medium" data-i18n="medium" aria-pressed="false">Средне</button>
+        <button type="button" class="diff" data-diff="hard" data-i18n="hard" aria-pressed="false">Сложно</button>
+        <button type="button" class="diff is-on" data-diff="mix" data-i18n="mix" aria-pressed="true">Весь мир</button>
+      </div>
+      <p id="diff-help" class="help">Весь набор: от гигантов до небольших стран, которые ещё можно нажать.</p>
+
+      <div class="menu-stats">
+        <p id="menu-best" class="stats"></p>
+        <p id="menu-found" class="stats"></p>
+        <p id="menu-last" class="stats dim"></p>
+      </div>
+
+      <div class="menu-actions">
+        <button type="button" class="btn-primary" id="play-btn" data-i18n="play">В путь</button>
+        <button type="button" class="btn-ghost" id="menu-sound" data-i18n="sound" aria-haspopup="dialog" aria-expanded="false" aria-pressed="true">Звук</button>
+      </div>
+      <button type="button" class="btn-ghost world-btn" id="world-btn" data-i18n="world">Все страны</button>
+    </div>
+  </section>
+
+  <div id="hud" hidden>
+    <header class="topbar">
+      <div class="scorebox" id="scorebox">
+        <div class="score-main">
+          <div class="scorebox-kicker" data-i18n="score">очки</div>
+          <div class="scorebox-num" id="score">0</div>
+        </div>
+        <div class="scorebox-meta">
+          <span id="best-line">рекорд ещё впереди</span>
+          <span id="streak">серия 0</span>
+          <span id="round-label">раунд 1</span>
+        </div>
+      </div>
+      <div class="top-actions">
+        <div class="lang" role="group" data-i18n-aria="language" aria-label="Язык">
+          <button type="button" class="lang-btn is-on" data-lang="ru" aria-pressed="true">RU</button>
+          <button type="button" class="lang-btn" data-lang="en" aria-pressed="false">EN</button>
+        </div>
+        <span id="mode-pill" class="pill">Названия</span>
+        <button type="button" class="chip" id="sound-btn" data-i18n="sound" aria-haspopup="dialog" aria-expanded="false" aria-pressed="true">Звук</button>
+        <button type="button" class="chip" id="atlas-btn"><span data-i18n="atlas">Атлас</span> <b id="atlas-badge">0</b></button>
+        <button type="button" class="chip" id="view-btn" data-i18n="globe">Весь шар</button>
+        <button type="button" class="chip" id="home-btn" data-i18n="menu">Меню</button>
+      </div>
+    </header>
+
+    <div id="question" class="question" aria-live="polite">
+      <p id="q-kicker" class="kicker">Где эта страна?</p>
+      <div class="q-main">
+        <div id="q-flag-wrap" class="flag-frame" hidden>
+          <img id="q-flag" alt="" draggable="false" />
+        </div>
+        <h2 id="q-name"></h2>
+      </div>
+      <button type="button" id="q-speak" class="speak" data-i18n="speakAgain">Произнести ещё раз</button>
+      <p id="q-hint" class="q-hint" hidden></p>
+      <div class="timer" aria-hidden="true"><span id="q-timer"></span></div>
+    </div>
+
+    <div id="dock" class="dock">
+      <div id="heat" class="heat" hidden>
+        <p id="heat-name"></p>
+        <div class="heat-row">
+          <span id="heat-label">Холодно</span>
+          <div class="heat-track"><div id="heat-fill"></div></div>
+        </div>
+        <p id="heat-meta"></p>
+      </div>
+      <p id="coach" class="coach" data-i18n="coach" hidden>Тяните шар · колесо приближает · клик по стране — ответ</p>
+      <div class="dock-row">
+        <div class="lives">
+          <span class="lives-kicker" data-i18n="tries">Попытки</span>
+          <div id="attempts" data-i18n-aria="tries" aria-label="Попытки"></div>
+        </div>
+        <button type="button" id="hint-btn" class="btn-ghost">Подсказка</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" role="status" aria-live="polite"></div>
+
+  <aside id="sound-menu" class="sound-menu" hidden role="dialog" aria-labelledby="sound-title">
+    <div class="sound-head">
+      <h2 id="sound-title" data-i18n="sound">Звук</h2>
+      <button type="button" class="chip" id="sound-close" data-i18n="close">Закрыть</button>
+    </div>
+    <button type="button" class="sound-toggle is-on" id="sound-toggle" aria-pressed="true">
+      <span id="sound-toggle-label">Звук вкл</span>
+    </button>
+    <label class="sound-volume" for="volume">
+      <span data-i18n="volume">Громкость</span>
+      <b id="volume-readout">100%</b>
+      <input type="range" id="volume" min="0" max="100" step="1" value="100" />
+    </label>
+  </aside>
+
+  <aside id="peek" hidden>
+    <div class="peek-top">
+      <img id="peek-flag" class="peek-flag" alt="" draggable="false" hidden />
+      <div class="peek-copy">
+        <h2 id="peek-name"></h2>
+        <p id="peek-full" hidden></p>
+      </div>
+      <button type="button" class="chip" id="peek-close" data-i18n="close">Закрыть</button>
+    </div>
+    <div id="peek-facts" class="peek-facts"></div>
+  </aside>
+
+  <div id="revive" hidden>
+    <article class="result-card">
+      <p class="kicker" data-i18n="reviveKicker">Попытки кончились</p>
+      <h2 data-i18n="reviveTitle">Ещё один шанс</h2>
+      <p class="result-msg" data-i18n="reviveLead">Короткий ролик — и можно выбрать страну ещё раз.</p>
+      <div class="result-actions">
+        <button type="button" class="btn-primary" id="revive-yes" data-i18n="revive">Смотреть ролик</button>
+        <button type="button" class="btn-ghost" id="revive-no" data-i18n="reviveSkip">Показать страну</button>
+      </div>
+    </article>
+  </div>
+
+  <div id="result" hidden>
+    <article id="result-card" class="result-card">
+      <div id="result-stamp" class="stamp" data-i18n="exact" hidden>ТОЧНО</div>
+      <p id="result-kicker" class="kicker">Верно</p>
+      <div class="flag-frame" id="result-flag-wrap">
+        <img id="result-flag" alt="" draggable="false" />
+      </div>
+      <h2 id="result-name"></h2>
+      <p id="result-full" class="full" hidden></p>
+      <p id="result-facts" class="facts"></p>
+      <p id="result-msg" class="result-msg"></p>
+      <div id="result-break"></div>
+      <div class="result-actions">
+        <button type="button" class="btn-primary" id="next-btn" data-i18n="next">Дальше</button>
+        <button type="button" class="btn-ghost" id="menu-btn" data-i18n="toMenu">В меню</button>
+      </div>
+    </article>
+  </div>
+
+  <div id="atlas" class="scrim" hidden>
+    <div class="atlas-card" role="dialog" aria-labelledby="atlas-title">
+      <header class="atlas-head">
+        <div>
+          <p class="eyebrow" id="atlas-eyebrow" data-i18n="collection">Коллекция</p>
+          <h2 id="atlas-title" data-i18n="atlas">Атлас</h2>
+          <p id="atlas-count"></p>
+        </div>
+        <button type="button" class="chip" id="atlas-close" data-i18n="close">Закрыть</button>
+      </header>
+      <div id="atlas-grid"></div>
+      <div id="atlas-detail" hidden>
+        <button type="button" class="chip" id="atlas-back" data-i18n="back">Назад</button>
+        <div class="flag-frame" id="atlas-flag-wrap" hidden>
+          <img id="atlas-flag" alt="" draggable="false" />
+        </div>
+        <h2 id="atlas-name"></h2>
+        <p id="atlas-full" class="full" hidden></p>
+        <p id="atlas-facts" class="facts"></p>
+      </div>
+      <div class="atlas-pager" id="atlas-pager" hidden>
+        <button type="button" class="chip" id="atlas-prev" data-i18n="back">Назад</button>
+        <span id="atlas-page"></span>
+        <button type="button" class="chip" id="atlas-next" data-i18n="next">Дальше</button>
+      </div>
+      <button type="button" class="btn-ghost danger" id="atlas-reset" data-i18n="reset">Сбросить прогресс</button>
+    </div>
+  </div>
+
+  <noscript><p class="noscript">Для игры нужен JavaScript.</p></noscript>
+  <script src="vendor/topojson-client.min.js"></script>
+  <script src="vendor/globe.gl.min.js"></script>
+  <script src="vendor/vk-bridge.min.js"></script>
+  <script src="js/vk-ads.js"></script>
+  <script src="js/atlas.js"></script>
+  <script src="js/meta.js"></script>
+  <script src="js/game.js"></script>
+</body>
+</html>
